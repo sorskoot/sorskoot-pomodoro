@@ -54,11 +54,11 @@ describe('registerServiceWorker', () => {
 
     registerServiceWorker();
     window.dispatchEvent(new Event('load'));
-    await Promise.resolve();
-
-    expect(consoleError).toHaveBeenCalledWith(
-      'Service worker registration failed:',
-      error,
-    );
+    await vi.waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        'Service worker registration failed:',
+        error,
+      );
+    });
   });
 });
