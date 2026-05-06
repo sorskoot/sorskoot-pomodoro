@@ -32,7 +32,13 @@ self.addEventListener('fetch', (event) => {
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('./index.html')),
+      fetch(event.request).catch((error) => {
+        console.error(
+          'Navigation fetch failed, falling back to cached index.html:',
+          error,
+        );
+        return caches.match('./index.html');
+      }),
     );
     return;
   }
@@ -51,7 +57,10 @@ self.addEventListener('fetch', (event) => {
         const responseToCache = response.clone();
         void caches.open(CACHE_NAME).then((cache) => {
           void cache.put(event.request, responseToCache).catch((error) => {
-            console.error('Failed to update cache entry:', error);
+            console.error(
+              `Failed to update cache entry for ${event.request.url}:`,
+              error,
+            );
           });
         });
 
