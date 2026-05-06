@@ -16,7 +16,9 @@ const FAST_SETTINGS = {
 };
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({
+    toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date'],
+  });
 });
 
 afterEach(() => {
