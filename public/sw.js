@@ -50,7 +50,9 @@ self.addEventListener('fetch', (event) => {
 
         const responseToCache = response.clone();
         void caches.open(CACHE_NAME).then((cache) => {
-          void cache.put(event.request, responseToCache);
+          void cache.put(event.request, responseToCache).catch((error) => {
+            console.error('Failed to update cache entry:', error);
+          });
         });
 
         return response;
