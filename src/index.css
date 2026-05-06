@@ -1,0 +1,78 @@
+:root {
+  /* Colors */
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface-raised: #0f3460;
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  /* Mode accent colors */
+  --color-work: #e94560;
+  --color-short-break: #0f9b58;
+  --color-long-break: #4a90d9;
+
+  /* Text */
+  --color-text-primary: #eaeaea;
+  --color-text-secondary: #9a9ab0;
+  --color-text-muted: #5c5c7a;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+
+  /* Typography */
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-timer: clamp(3rem, 10vw, 5rem);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+}
+
+button {
+  cursor: pointer;
+  font: inherit;
+}
+
+input,
+select {
+  font: inherit;
+}

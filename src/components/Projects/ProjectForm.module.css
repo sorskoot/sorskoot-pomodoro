@@ -1,0 +1,125 @@
+/* ─── Form wrapper ───────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* ─── Field row ──────────────────────────────────────────── */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Text input ─────────────────────────────────────────── */
+.input {
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  border-color: var(--color-work);
+  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.18);
+}
+
+/* ─── Color row ──────────────────────────────────────────── */
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.colorInput {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: none;
+  transition: border-color var(--transition-fast);
+}
+
+.colorInput:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.colorPreview {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Actions ────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  margin-top: var(--space-xs);
+}
+
+.submitBtn {
+  padding: var(--space-sm) var(--space-lg);
+  background-color: var(--color-work);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition:
+    filter var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.submitBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.submitBtn:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.cancelBtn {
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.cancelBtn:hover {
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(255, 255, 255, 0.04);
+}

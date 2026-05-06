@@ -1,0 +1,83 @@
+/* ─── Row ────────────────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  /* Left accent border by session type — overridden per variant below */
+  border-left: 3px solid var(--color-work);
+  background-color: transparent;
+  transition: background-color var(--transition-fast);
+  /* Work sessions get the red left border by default.
+     Wrap in a data-type attribute from the parent to vary. */
+}
+
+.row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Break sessions: cool green left border */
+.row[data-type="short-break"],
+.row[data-type="long-break"] {
+  border-left-color: var(--color-short-break);
+}
+
+/* ─── Icon ───────────────────────────────────────────────── */
+.icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  width: 1.5rem;
+  text-align: center;
+  line-height: 1;
+}
+
+/* ─── Time range ─────────────────────────────────────────── */
+.timeRange {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  min-width: 5.5rem;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+/* ─── Project name ───────────────────────────────────────── */
+.projectName {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.noProject {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Badge ──────────────────────────────────────────────── */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badgeCompleted {
+  background-color: rgba(15, 155, 88, 0.15);
+  color: var(--color-short-break);
+  border: 1px solid rgba(15, 155, 88, 0.25);
+}
+
+.badgeIncomplete {
+  background-color: rgba(92, 92, 122, 0.15);
+  color: var(--color-text-muted);
+  border: 1px solid rgba(92, 92, 122, 0.2);
+}

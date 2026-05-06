@@ -1,0 +1,21 @@
+/* ─── Page shell ─────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-xl) var(--space-md);
+  /* Vertically center in the available viewport height */
+  min-height: calc(100vh - 60px); /* 60px ≈ nav height */
+  justify-content: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-lg) var(--space-md);
+    gap: var(--space-lg);
+    justify-content: flex-start;
+    padding-top: var(--space-xl);
+  }
+}

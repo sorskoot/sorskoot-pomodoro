@@ -1,0 +1,148 @@
+/* ─── Page shell ─────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg) 0;
+}
+
+/* ─── Page title ─────────────────────────────────────────── */
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* ─── Section card ───────────────────────────────────────── */
+.section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ─── Section heading ────────────────────────────────────── */
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+/* ─── Fields list ────────────────────────────────────────── */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Thin divider between sibling field items */
+.fields > * + * {
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─── Data actions list ──────────────────────────────────── */
+.dataActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.dataAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.dataActionLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.dataActionDesc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+  line-height: 1.5;
+}
+
+/* ─── Export / Import buttons ────────────────────────────── */
+.exportBtn,
+.importBtn {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    filter var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.exportBtn {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.exportBtn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+.importBtn {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.importBtn:hover {
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+}
+
+/* ─── Danger zone section ────────────────────────────────── */
+.dangerSection {
+  border-color: rgba(233, 69, 96, 0.3);
+  background-color: rgba(233, 69, 96, 0.04);
+}
+
+.dangerTitle {
+  color: var(--color-work);
+}
+
+.dangerBtn {
+  padding: var(--space-sm) var(--space-lg);
+  background-color: var(--color-work);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    filter var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.dangerBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.dangerBtn:active {
+  transform: translateY(0);
+  filter: brightness(0.9);
+}

@@ -1,0 +1,113 @@
+/* ─── Shell ─────────────────────────────────────────────── */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* ─── Nav bar ────────────────────────────────────────────── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Subtle backdrop blur on supporting browsers */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.brand {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brand::before {
+  content: "🍅";
+  font-size: 1.1em;
+}
+
+/* ─── Nav links ──────────────────────────────────────────── */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  list-style: none;
+}
+
+.navLink {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+  border: 1px solid transparent;
+  line-height: 1.4;
+  /* Make it a button if rendered as <button> */
+  background: none;
+  display: inline-block;
+}
+
+.navLink:hover {
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Active state: pill uses the current mode accent (set from JS via data attribute) */
+.navLinkActive {
+  color: #fff;
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+/* Per-mode active accent overrides — add data-mode="work|short-break|long-break"
+   to the <nav> or shell, and the active link adopts it. */
+[data-mode="work"] .navLinkActive {
+  background-color: var(--color-work);
+  border-color: transparent;
+}
+
+[data-mode="short-break"] .navLinkActive {
+  background-color: var(--color-short-break);
+  border-color: transparent;
+}
+
+[data-mode="long-break"] .navLinkActive {
+  background-color: var(--color-long-break);
+  border-color: transparent;
+}
+
+/* ─── Main content ───────────────────────────────────────── */
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+/* ─── Responsive: collapse brand text on very small screens ─ */
+@media (max-width: 400px) {
+  .navLink {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+  }
+
+  .brand {
+    font-size: var(--font-size-md);
+  }
+}
