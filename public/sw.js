@@ -38,7 +38,15 @@ self.addEventListener('fetch', (event) => {
           'Navigation fetch failed, falling back to cached index.html:',
           error,
         );
-        return caches.match(OFFLINE_FALLBACK_URL);
+        return caches.match(OFFLINE_FALLBACK_URL).then(
+          (cachedFallback) =>
+            cachedFallback ??
+            new Response('Offline', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/plain' },
+            }),
+        );
       }),
     );
     return;
@@ -60,14 +68,15 @@ self.addEventListener('fetch', (event) => {
         }
 
         const responseToCache = response.clone();
-        void caches.open(CACHE_NAME).then((cache) => {
-          void cache.put(event.request, responseToCache).catch((error) => {
+        void caches
+          .open(CACHE_NAME)
+          .then((cache) => cache.put(event.request, responseToCache))
+          .catch((error) => {
             console.error(
               `Failed to update cache entry for ${event.request.url}:`,
               error,
             );
           });
-        });
 
         return response;
       });
