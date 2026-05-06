@@ -1,10 +1,11 @@
 const CACHE_NAME = 'sorskoot-pomodoro-v1';
+const OFFLINE_FALLBACK_URL = '/sorskoot-pomodoro/index.html';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icons/icon-192.svg',
-  './icons/icon-512.svg',
+  '/sorskoot-pomodoro/',
+  OFFLINE_FALLBACK_URL,
+  '/sorskoot-pomodoro/manifest.webmanifest',
+  '/sorskoot-pomodoro/icons/icon-192.svg',
+  '/sorskoot-pomodoro/icons/icon-512.svg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -37,7 +38,7 @@ self.addEventListener('fetch', (event) => {
           'Navigation fetch failed, falling back to cached index.html:',
           error,
         );
-        return caches.match('./index.html');
+        return caches.match(OFFLINE_FALLBACK_URL);
       }),
     );
     return;
@@ -50,7 +51,11 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        if (
+          !response ||
+          response.status !== 200 ||
+          (response.type !== 'basic' && response.type !== 'cors')
+        ) {
           return response;
         }
 
