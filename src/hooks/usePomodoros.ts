@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { PomodoroRepository } from '../services/PomodoroRepository';
-import { storageService } from '../services/StorageService';
+import { getStorageService } from '../services/StorageService';
 import { generateId } from '../utils/id';
 import type { PomodoroSession, SessionType } from '../types';
 
@@ -14,7 +14,7 @@ export interface UsePomodorosResult {
 export function usePomodoros(): UsePomodorosResult {
   const repoRef = useRef<PomodoroRepository | null>(null);
   if (repoRef.current === null) {
-    repoRef.current = new PomodoroRepository(storageService);
+    repoRef.current = new PomodoroRepository(getStorageService());
   }
   const repo = repoRef.current;
 
