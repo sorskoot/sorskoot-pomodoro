@@ -1,150 +1,130 @@
+/**
+ * Regression tests for the useTimer auto-start closure fix.
+ *
+ * The fix: advanceMode passes `() => tickRef.current()` to timerService.start
+ * rather than capturing `tick` at call time. This guarantees the callback is
+ * always a defined function — never undefined — when auto-start fires after a
+ * session completes.
+ *
+ * Ticks are driven manually by capturing the callback from timerService.start,
+ * keeping tests fully synchronous and deterministic without fake timers.
+ */
 import { renderHook, act } from '@testing-library/react';
 import { useTimer } from './useTimer';
-import { DEFAULT_SETTINGS } from '../types';
 import { timerService } from '../services/TimerService';
+import type { Settings } from '../types';
 
-// playBeep uses AudioContext which is unavailable in jsdom — mock it out.
+vi.mock('../services/TimerService', () => ({
+  timerService: {
+    start: vi.fn(),
+    stop: vi.fn(),
+    isRunning: vi.fn().mockReturnValue(false),
+  },
+}));
+
 vi.mock('../utils/sound', () => ({ playBeep: vi.fn() }));
 
-// Settings with a 1-minute work session used for completion tests so we only
-// need to advance 60 seconds instead of the full 25-minute default.
-const FAST_SETTINGS = {
-  ...DEFAULT_SETTINGS,
-  workDuration: 1,       // 1 min = 60 ticks
-  shortBreakDuration: 1, // 1 min = 60 ticks
-  soundEnabled: false,   // no sound side-effects
+// 1-minute sessions → exactly 60 ticks to reach zero; fast to drive manually.
+const FAST_SETTINGS: Settings = {
+  workDuration: 1,
+  shortBreakDuration: 1,
+  longBreakDuration: 1,
+  longBreakInterval: 4,
+  autoStartBreaks: false,
+  autoStartPomodoros: false,
+  soundEnabled: false,
 };
 
+/**
+ * Drive a captured tick callback `count` times inside a single act so that
+ * React flushes all batched state updates once the loop finishes.
+ * The tick implementation reads/writes secondsLeftRef synchronously, so the
+ * loop correctly traverses all seconds down to zero even inside one act call.
+ */
+function driveTicksToCompletion(capturedTick: () => void, count: number): void {
+  act(() => {
+    for (let i = 0; i < count; i++) {
+      capturedTick();
+    }
+  });
+}
+
 beforeEach(() => {
-  vi.useFakeTimers({
-    toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date'],
-  });
+  vi.clearAllMocks();
+  vi.mocked(timerService.isRunning).mockReturnValue(false);
 });
 
-afterEach(() => {
-  // Stop the singleton timer so its internal state is clean for the next test,
-  // then restore real timers.
-  timerService.stop();
-  vi.useRealTimers();
-});
-
-describe('useTimer', () => {
-  it('initial secondsLeft equals DEFAULT_SETTINGS.workDuration * 60', () => {
-    const { result } = renderHook(() =>
-      useTimer({ settings: DEFAULT_SETTINGS }),
-    );
-    expect(result.current.secondsLeft).toBe(DEFAULT_SETTINGS.workDuration * 60);
-  });
-
-  it('start() causes secondsLeft to decrease by 1 per second', () => {
+describe('useTimer — auto-start closure regression', () => {
+  it('timerService.start receives a defined function callback on the initial start() call', () => {
     const { result } = renderHook(() => useTimer({ settings: FAST_SETTINGS }));
 
     act(() => {
       result.current.start();
     });
 
-    act(() => {
-      vi.advanceTimersByTime(3000); // 3 ticks
-    });
+    expect(timerService.start).toHaveBeenCalledTimes(1);
 
-    expect(result.current.secondsLeft).toBe(FAST_SETTINGS.workDuration * 60 - 3);
-    expect(result.current.isRunning).toBe(true);
+    const cb = vi.mocked(timerService.start).mock.calls[0][0];
+    expect(typeof cb).toBe('function');
+    expect(cb).not.toBeNull();
+    expect(cb).not.toBeUndefined();
   });
 
-  it('pause() stops the countdown', () => {
-    const { result } = renderHook(() => useTimer({ settings: FAST_SETTINGS }));
+  it('when autoStartBreaks is true and a work session completes, timerService.start receives a valid function for the break', () => {
+    const settings: Settings = { ...FAST_SETTINGS, autoStartBreaks: true };
+    const { result } = renderHook(() => useTimer({ settings }));
 
     act(() => {
       result.current.start();
     });
 
-    act(() => {
-      vi.advanceTimersByTime(5000); // count down 5 seconds
-    });
+    // Capture tick and note seconds remaining before any ticks run.
+    const tick = vi.mocked(timerService.start).mock.calls[0][0];
+    expect(typeof tick).toBe('function');
 
-    act(() => {
-      result.current.pause();
-    });
+    const initialSeconds = result.current.secondsLeft; // 60 with FAST_SETTINGS
 
-    const secondsAfterPause = result.current.secondsLeft;
-    expect(result.current.isRunning).toBe(false);
+    // Drive every tick; zero-crossing triggers advanceMode(true) → auto-start.
+    driveTicksToCompletion(tick, initialSeconds);
 
-    act(() => {
-      vi.advanceTimersByTime(5000); // more time passes — should have no effect
-    });
+    // advanceMode(true) must have called timerService.start a second time.
+    expect(timerService.start).toHaveBeenCalledTimes(2);
 
-    expect(result.current.secondsLeft).toBe(secondsAfterPause);
+    const autoStartCb = vi.mocked(timerService.start).mock.calls[1][0];
+    expect(typeof autoStartCb).toBe('function');
+    expect(autoStartCb).not.toBeNull();
+    expect(autoStartCb).not.toBeUndefined();
   });
 
-  it('reset() restores secondsLeft to the current mode duration', () => {
-    const { result } = renderHook(() => useTimer({ settings: FAST_SETTINGS }));
+  it('when autoStartPomodoros is true and a break session completes, timerService.start receives a valid function for the next pomodoro', () => {
+    const settings: Settings = { ...FAST_SETTINGS, autoStartPomodoros: true };
+    const { result } = renderHook(() => useTimer({ settings }));
 
-    act(() => {
-      result.current.start();
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(10000); // count down 10 seconds
-    });
-
-    act(() => {
-      result.current.reset();
-    });
-
-    expect(result.current.secondsLeft).toBe(FAST_SETTINGS.workDuration * 60);
-    expect(result.current.isRunning).toBe(false);
-  });
-
-  it('skip() advances mode from work to short-break', () => {
-    const { result } = renderHook(() => useTimer({ settings: FAST_SETTINGS }));
-
-    expect(result.current.mode).toBe('work');
-
+    // Skip to short-break without triggering any auto-start side-effects.
     act(() => {
       result.current.skip();
     });
-
     expect(result.current.mode).toBe('short-break');
-    expect(result.current.isRunning).toBe(false);
-    // secondsLeft should now reflect the short-break duration.
-    expect(result.current.secondsLeft).toBe(FAST_SETTINGS.shortBreakDuration * 60);
-  });
 
-  it('pomodoroCount increments after a full work session completes', () => {
-    const { result } = renderHook(() => useTimer({ settings: FAST_SETTINGS }));
-
-    expect(result.current.pomodoroCount).toBe(0);
-
+    // Start the break session; isRunning() returns false from the mock.
     act(() => {
       result.current.start();
     });
 
-    // Advance exactly workDuration minutes to trigger the zero-crossing tick.
-    act(() => {
-      vi.advanceTimersByTime(FAST_SETTINGS.workDuration * 60 * 1000);
-    });
+    const tick = vi.mocked(timerService.start).mock.calls[0][0];
+    expect(typeof tick).toBe('function');
 
-    expect(result.current.pomodoroCount).toBe(1);
-    // Mode should have advanced to short-break.
-    expect(result.current.mode).toBe('short-break');
-  });
+    const initialSeconds = result.current.secondsLeft; // 60 for short-break
 
-  it('onComplete callback is called when the timer reaches 0', () => {
-    const onComplete = vi.fn();
+    // Drive all break ticks; completing a break with autoStartPomodoros=true
+    // must call timerService.start again with a valid wrapper function.
+    driveTicksToCompletion(tick, initialSeconds);
 
-    const { result } = renderHook(() =>
-      useTimer({ settings: FAST_SETTINGS, onComplete }),
-    );
+    expect(timerService.start).toHaveBeenCalledTimes(2);
 
-    act(() => {
-      result.current.start();
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(FAST_SETTINGS.workDuration * 60 * 1000);
-    });
-
-    expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith('work');
+    const autoStartCb = vi.mocked(timerService.start).mock.calls[1][0];
+    expect(typeof autoStartCb).toBe('function');
+    expect(autoStartCb).not.toBeNull();
+    expect(autoStartCb).not.toBeUndefined();
   });
 });

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { timerService } from '../services/TimerService';
 import { playBeep } from '../utils/sound';
 import type { Settings, SessionType } from '../types';
+import type { TimerCallback } from '../services/interfaces/ITimerService';
 
 export interface UseTimerOptions {
   settings: Settings;
@@ -57,6 +58,8 @@ export function useTimer({ settings, onComplete }: UseTimerOptions): UseTimerRes
   const pomodoroCountRef = useRef(pomodoroCount);
   const settingsRef = useRef(settings);
   const onCompleteRef = useRef(onComplete);
+  // tickRef lets advanceMode always call the live tick without a forward-reference closure bug.
+  const tickRef = useRef<TimerCallback>(() => {});
 
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { secondsLeftRef.current = secondsLeft; }, [secondsLeft]);
@@ -70,6 +73,11 @@ export function useTimer({ settings, onComplete }: UseTimerOptions): UseTimerRes
     if (!isRunning) {
       setSecondsLeft(durationFor(mode, settings));
     }
+  // Intentional: only the three duration fields should trigger this reset.
+  // Including `isRunning` would fire on every pause/resume (resetting a mid-session
+  // timer); including `mode` would fire on every session transition. Neither is
+  // desired. There is no isRunningRef to use as a workaround without adding new
+  // logic, so the exhaustive-deps rule must be suppressed here.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.workDuration, settings.shortBreakDuration, settings.longBreakDuration]);
 
@@ -96,14 +104,13 @@ export function useTimer({ settings, onComplete }: UseTimerOptions): UseTimerRes
 
     if (autoStart) {
       // timerService may already be stopped; start fresh.
+      // Use tickRef so we always invoke the live tick, not the stale closure captured at creation time.
       timerService.stop();
-      timerService.start(tick);
+      timerService.start(() => tickRef.current());
       setIsRunning(true);
     } else {
       setIsRunning(false);
     }
-  // tick is defined below and never changes identity — safe to reference via closure.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** Called every second by timerService. */
@@ -140,6 +147,9 @@ export function useTimer({ settings, onComplete }: UseTimerOptions): UseTimerRes
 
     advanceMode(shouldAutoStart);
   }, [advanceMode]);
+
+  // Keep tickRef pointing at the live tick so advanceMode's auto-start path is never stale.
+  useEffect(() => { tickRef.current = tick; }, [tick]);
 
   const start = useCallback(() => {
     if (timerService.isRunning()) return;
