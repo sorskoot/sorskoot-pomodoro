@@ -1,48 +1,59 @@
-# PWA Service Worker
+# PWA Deployment
 
-The service worker is registered in `src/pwa.ts` using `import.meta.env.BASE_URL`,
-which Vite replaces statically at build time with the configured `base` path.
+## Service worker registration
 
-## How it works
+The service worker is registered using `import.meta.env.BASE_URL`, which Vite
+replaces statically at build time. Trailing-slash normalization is applied
+automatically, so the registration path is always well-formed regardless of how
+the base is specified.
 
-`PWA_BASE_PATH` is computed once at module load:
+Source: `src/pwa.ts`
 
-```typescript
-const rawBase = import.meta.env.BASE_URL;
-export const PWA_BASE_PATH = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+```ts
+const rawBase: string = import.meta.env.BASE_URL;
+export const PWA_BASE_PATH: string = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+
+navigator.serviceWorker.register(`${PWA_BASE_PATH}sw.js`, { scope: PWA_BASE_PATH });
 ```
-
-The trailing slash is normalized so the registration is always valid regardless of
-whether the build tool includes it.
 
 ## Development
 
-`vite.config.ts` sets `base: './'`. In dev mode Vite resolves this to `/`, so:
+In development (`npm run dev`), Vite sets `BASE_URL` to `/`.
 
-- Service worker registered at: `/sw.js`
-- Scope: `/`
+- `PWA_BASE_PATH` = `/`
+- Service worker registered at `/sw.js` with scope `/`
 
 ## Production — GitHub Pages
 
-Build with the sub-path as `--base`:
+GitHub Pages serves the app under `/sorskoot-pomodoro/`. Pass the base path to
+Vite at build time:
 
 ```bash
 npm run build -- --base=/sorskoot-pomodoro/
 ```
 
-This sets `import.meta.env.BASE_URL` to `/sorskoot-pomodoro/` in the bundle, so:
+- `PWA_BASE_PATH` = `/sorskoot-pomodoro/`
+- Service worker registered at `/sorskoot-pomodoro/sw.js` with scope `/sorskoot-pomodoro/`
 
-- Service worker registered at: `/sorskoot-pomodoro/sw.js`
-- Scope: `/sorskoot-pomodoro/`
+The deploy workflow (`.github/workflows/deploy.yml`) runs this command
+automatically on pushes to `main` and uploads `dist/` as the Pages artifact.
 
-The GitHub Actions deploy workflow passes this flag automatically.
-
-## Deploying to a different sub-path
-
-Replace `/sorskoot-pomodoro/` with your own path:
+## Manual deploy steps
 
 ```bash
-npm run build -- --base=/my-app/
+# 1. Install dependencies
+npm ci
+
+# 2. Build with the correct base path
+npm run build -- --base=/sorskoot-pomodoro/
+
+# 3. Deploy dist/ to the gh-pages branch or Pages artifact upload
+#    (handled automatically by the deploy workflow)
 ```
 
-No code changes are required — `PWA_BASE_PATH` is derived entirely from `BASE_URL`.
+## Changing the base path
+
+If you fork this repository and deploy to a different path, change the
+`--base=` value to match your Pages URL sub-path. No other source changes are
+required — the service worker registration derives its path from `BASE_URL`
+automatically.
