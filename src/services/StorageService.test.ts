@@ -1,4 +1,5 @@
 import { StorageService } from './StorageService';
+import type { VMock } from '../test/test-utils';
 
 describe('StorageService', () => {
   let service: StorageService;
@@ -24,17 +25,17 @@ describe('StorageService', () => {
   // ---------------------------------------------------------------------------
   describe('get()', () => {
     it('returns null when the key does not exist', () => {
-      (stub.getItem as unknown as jest.Mock).mockReturnValue(null);
+      (stub.getItem as unknown as VMock).mockReturnValue(null);
       expect(service.get('missing-key')).toBeNull();
     });
 
     it('returns the parsed value for a stored key', () => {
-      (stub.getItem as unknown as jest.Mock).mockReturnValue(JSON.stringify({ x: 42 }));
+      (stub.getItem as unknown as VMock).mockReturnValue(JSON.stringify({ x: 42 }));
       expect(service.get<{ x: number }>('my-key')).toEqual({ x: 42 });
     });
 
     it('returns null and logs console.error when the stored value is invalid JSON', () => {
-      (stub.getItem as unknown as jest.Mock).mockReturnValue('not-json');
+      (stub.getItem as unknown as VMock).mockReturnValue('not-json');
 
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -47,7 +48,7 @@ describe('StorageService', () => {
     });
 
     it('returns null and logs console.error when storage.getItem throws', () => {
-      (stub.getItem as unknown as jest.Mock).mockImplementation(() => { throw new Error('getItem unavailable'); });
+      (stub.getItem as unknown as VMock).mockImplementation(() => { throw new Error('getItem unavailable'); });
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const result = service.get('any-key');
@@ -65,8 +66,8 @@ describe('StorageService', () => {
   describe('set()', () => {
     it('stores the serialised value (round-trip: set then get returns the same value)', () => {
       const store: Record<string, string> = {};
-      (stub.setItem as unknown as jest.Mock).mockImplementation((k: string, v: string) => { store[k] = v; });
-      (stub.getItem as unknown as jest.Mock).mockImplementation((k: string) => store[k] ?? null);
+      (stub.setItem as unknown as VMock).mockImplementation((k: string, v: string) => { store[k] = v; });
+      (stub.getItem as unknown as VMock).mockImplementation((k: string) => store[k] ?? null);
 
       const payload = { name: 'Pomodoro', count: 5 };
       service.set('rt-key', payload);
@@ -87,7 +88,7 @@ describe('StorageService', () => {
     });
 
     it('does not throw and logs console.error when storage.setItem throws a QuotaExceededError', () => {
-      (stub.setItem as unknown as jest.Mock).mockImplementation(() => { throw new DOMException('QuotaExceededError', 'QuotaExceededError'); });
+      (stub.setItem as unknown as VMock).mockImplementation(() => { throw new DOMException('QuotaExceededError', 'QuotaExceededError'); });
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       expect(() => service.set('quota-key', { data: 'value' })).not.toThrow();
@@ -103,8 +104,8 @@ describe('StorageService', () => {
   describe('remove()', () => {
     it('removes an existing key so that get() returns null afterwards', () => {
       const store: Record<string, string> = { 'remove-me': JSON.stringify('some value') };
-      (stub.getItem as unknown as jest.Mock).mockImplementation((k: string) => store[k] ?? null);
-      (stub.removeItem as unknown as jest.Mock).mockImplementation((k: string) => { delete store[k]; });
+      (stub.getItem as unknown as VMock).mockImplementation((k: string) => store[k] ?? null);
+      (stub.removeItem as unknown as VMock).mockImplementation((k: string) => { delete store[k]; });
 
       service.remove('remove-me');
 
@@ -118,9 +119,9 @@ describe('StorageService', () => {
   describe('clear()', () => {
     it('clears all keys so that every stored key returns null afterwards', () => {
       const store: Record<string, string> = {};
-      (stub.getItem as unknown as jest.Mock).mockImplementation((k: string) => store[k] ?? null);
-      (stub.setItem as unknown as jest.Mock).mockImplementation((k: string, v: string) => { store[k] = v; });
-      (stub.clear as unknown as jest.Mock).mockImplementation(() => { for (const k in store) delete store[k]; });
+      (stub.getItem as unknown as VMock).mockImplementation((k: string) => store[k] ?? null);
+      (stub.setItem as unknown as VMock).mockImplementation((k: string, v: string) => { store[k] = v; });
+      (stub.clear as unknown as VMock).mockImplementation(() => { for (const k in store) delete store[k]; });
 
       service.set('alpha', 1);
       service.set('beta', 2);
