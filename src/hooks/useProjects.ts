@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { ProjectRepository } from '../services/ProjectRepository';
-import { storageService } from '../services/StorageService';
+import { getStorageService } from '../services/StorageService';
 import { generateId } from '../utils/id';
 import type { Project } from '../types';
 
@@ -15,7 +15,7 @@ export interface UseProjectsResult {
 export function useProjects(): UseProjectsResult {
   const repoRef = useRef<ProjectRepository | null>(null);
   if (repoRef.current === null) {
-    repoRef.current = new ProjectRepository(storageService);
+    repoRef.current = new ProjectRepository(getStorageService());
   }
   const repo = repoRef.current;
 

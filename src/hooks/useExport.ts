@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { ExportService } from '../services/ExportService';
-import { storageService } from '../services/StorageService';
+import { getStorageService } from '../services/StorageService';
 
 export interface UseExportOptions {
   onSuccess?: () => void;
@@ -23,7 +23,7 @@ function formatDate(date: Date): string {
 export function useExport({ onSuccess, onError }: UseExportOptions = {}): UseExportResult {
   const serviceRef = useRef<ExportService | null>(null);
   if (serviceRef.current === null) {
-    serviceRef.current = new ExportService(storageService);
+    serviceRef.current = new ExportService(getStorageService());
   }
   const service = serviceRef.current;
 
