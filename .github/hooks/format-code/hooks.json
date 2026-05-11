@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "hooks": {
+        "postToolUse": [
+            {
+                "type": "command",
+                "bash": "node -r ts-node/register .github/hooks/format-copilot-change.ts",
+                "powershell": "node -r ts-node/register .github/hooks/format-copilot-change.ts",
+                "cwd": ".",
+                "timeoutSec": 30
+            }
+        ]
+    }
+}
