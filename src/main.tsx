@@ -4,6 +4,14 @@ import './index.css';
 import App from './App';
 import { registerServiceWorker } from './pwa';
 
+function requestNotificationPermission(): void {
+    if (typeof window === 'undefined' || typeof Notification === 'undefined')
+        return;
+    if (Notification.permission === 'default') {
+        void Notification.requestPermission();
+    }
+}
+
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <App />
@@ -11,3 +19,4 @@ createRoot(document.getElementById('root')!).render(
 );
 
 registerServiceWorker();
+requestNotificationPermission();
