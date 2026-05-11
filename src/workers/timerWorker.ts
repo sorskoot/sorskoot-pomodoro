@@ -34,7 +34,7 @@ function startLoop(): void {
             stopInterval();
             emit({ type: 'complete' });
         }
-    }, 250);
+    }, 1000);
 }
 
 self.onmessage = (event: MessageEvent<TimerWorkerCommand>) => {

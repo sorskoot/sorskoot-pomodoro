@@ -88,6 +88,7 @@ export function useTimer({
     // needing to restart the interval.
     const modeRef = useRef(mode);
     const secondsLeftRef = useRef(secondsLeft);
+    const isRunningRef = useRef(isRunning);
     const pomodoroCountRef = useRef(pomodoroCount);
     const settingsRef = useRef(settings);
     const onCompleteRef = useRef(onComplete);
@@ -97,12 +98,20 @@ export function useTimer({
     const endAtRef = useRef<number | null>(null);
     const usingWorkerRef = useRef(false);
 
+    const setRunning = useCallback((running: boolean) => {
+        isRunningRef.current = running;
+        setIsRunning(running);
+    }, []);
+
     useEffect(() => {
         modeRef.current = mode;
     }, [mode]);
     useEffect(() => {
         secondsLeftRef.current = secondsLeft;
     }, [secondsLeft]);
+    useEffect(() => {
+        isRunningRef.current = isRunning;
+    }, [isRunning]);
     useEffect(() => {
         pomodoroCountRef.current = pomodoroCount;
     }, [pomodoroCount]);
@@ -132,49 +141,52 @@ export function useTimer({
     ]);
 
     /** Advance to the next mode, optionally auto-starting it. */
-    const advanceMode = useCallback((autoStart: boolean) => {
-        const currentMode = modeRef.current;
-        const currentCount = pomodoroCountRef.current;
-        const currentSettings = settingsRef.current;
+    const advanceMode = useCallback(
+        (autoStart: boolean) => {
+            const currentMode = modeRef.current;
+            const currentCount = pomodoroCountRef.current;
+            const currentSettings = settingsRef.current;
 
-        let newCount = currentCount;
-        if (currentMode === 'work') {
-            newCount = currentCount + 1;
-            setPomodoroCount(newCount);
-            pomodoroCountRef.current = newCount;
-        }
-
-        const next = nextMode(currentMode, currentCount, currentSettings);
-        const nextSeconds = durationFor(next, currentSettings);
-
-        setMode(next);
-        modeRef.current = next;
-        setSecondsLeft(nextSeconds);
-        secondsLeftRef.current = nextSeconds;
-
-        if (autoStart) {
-            timerService.stop();
-
-            const nextEndAt = Date.now() + nextSeconds * 1000;
-            endAtRef.current = nextEndAt;
-
-            if (usingWorkerRef.current && workerRef.current) {
-                workerRef.current.postMessage({
-                    type: 'start',
-                    endAt: nextEndAt,
-                } satisfies TimerWorkerCommand);
-                setIsRunning(true);
-                return;
+            let newCount = currentCount;
+            if (currentMode === 'work') {
+                newCount = currentCount + 1;
+                setPomodoroCount(newCount);
+                pomodoroCountRef.current = newCount;
             }
 
-            // Use tickRef so we always invoke the live tick, not the stale closure captured at creation time.
-            timerService.start(() => tickRef.current());
-            setIsRunning(true);
-        } else {
-            setIsRunning(false);
-            endAtRef.current = null;
-        }
-    }, []);
+            const next = nextMode(currentMode, currentCount, currentSettings);
+            const nextSeconds = durationFor(next, currentSettings);
+
+            setMode(next);
+            modeRef.current = next;
+            setSecondsLeft(nextSeconds);
+            secondsLeftRef.current = nextSeconds;
+
+            if (autoStart) {
+                timerService.stop();
+
+                const nextEndAt = Date.now() + nextSeconds * 1000;
+                endAtRef.current = nextEndAt;
+
+                if (usingWorkerRef.current && workerRef.current) {
+                    workerRef.current.postMessage({
+                        type: 'start',
+                        endAt: nextEndAt,
+                    } satisfies TimerWorkerCommand);
+                    setRunning(true);
+                    return;
+                }
+
+                // Use tickRef so we always invoke the live tick, not the stale closure captured at creation time.
+                timerService.start(() => tickRef.current());
+                setRunning(true);
+            } else {
+                setRunning(false);
+                endAtRef.current = null;
+            }
+        },
+        [setRunning],
+    );
 
     useEffect(() => {
         if (typeof Worker === 'undefined') {
@@ -201,7 +213,7 @@ export function useTimer({
             if (message.type === 'complete') {
                 setSecondsLeft(0);
                 secondsLeftRef.current = 0;
-                setIsRunning(false);
+                setRunning(false);
                 endAtRef.current = null;
 
                 const completedMode = modeRef.current;
@@ -228,7 +240,7 @@ export function useTimer({
             workerRef.current = null;
             usingWorkerRef.current = false;
         };
-    }, [advanceMode]);
+    }, [advanceMode, setRunning]);
 
     /** Called every second by timerService. */
     const tick = useCallback(() => {
@@ -243,7 +255,7 @@ export function useTimer({
         timerService.stop();
         setSecondsLeft(0);
         secondsLeftRef.current = 0;
-        setIsRunning(false);
+        setRunning(false);
         endAtRef.current = null;
 
         const completedMode = modeRef.current;
@@ -265,7 +277,7 @@ export function useTimer({
                 : currentSettings.autoStartPomodoros;
 
         advanceMode(shouldAutoStart);
-    }, [advanceMode]);
+    }, [advanceMode, setRunning]);
 
     // Keep tickRef pointing at the live tick so advanceMode's auto-start path is never stale.
     useEffect(() => {
@@ -277,12 +289,12 @@ export function useTimer({
             type: 'pause',
         } satisfies TimerWorkerCommand);
         timerService.stop();
-        setIsRunning(false);
+        setRunning(false);
         endAtRef.current = null;
-    }, []);
+    }, [setRunning]);
 
     const start = useCallback(() => {
-        if (isRunning) return;
+        if (isRunningRef.current) return;
 
         const endAt = Date.now() + secondsLeftRef.current * 1000;
         endAtRef.current = endAt;
@@ -292,14 +304,14 @@ export function useTimer({
                 type: 'start',
                 endAt,
             } satisfies TimerWorkerCommand);
-            setIsRunning(true);
+            setRunning(true);
             return;
         }
 
         if (timerService.isRunning()) return;
         timerService.start(tick);
-        setIsRunning(true);
-    }, [isRunning, tick]);
+        setRunning(true);
+    }, [setRunning, tick]);
 
     const pause = useCallback(() => {
         stopActiveTimer();
